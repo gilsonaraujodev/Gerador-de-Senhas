@@ -32,7 +32,7 @@ git clone https://github.com/gilsonaraujodev/Gerador-de-Senhas
 
 - Acesse a pasta do projeto:
 ```
-cd seu-repositorio
+cd Gerador-De-Senhas
 ```
 
 - Execute o programa:
