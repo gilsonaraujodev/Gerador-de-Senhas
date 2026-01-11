@@ -27,7 +27,7 @@ python --version
 
 * Clone este repositório:
 ```
-git clone https://github.com/seu-usuario/seu-repositorio.git](https://github.com/gilsonaraujodev/Calculadora-Ruby)](https://github.com/gilsonaraujodev/Gerador-de-Senhas
+git clone https://github.com/gilsonaraujodev/Gerador-de-Senhas
 ```
 
 - Acesse a pasta do projeto:
