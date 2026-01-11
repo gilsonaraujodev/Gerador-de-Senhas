@@ -1,117 +1,102 @@
-import secrets # - secrets: geração de números aleatórios segura 
-import string # - string: contém conjuntos prontos de caracteres
+import secrets
+import string
 
-from dataclasses import dataclass # - dataclass: para definir classes simples de dados
-
-@dataclass(frozen=True)
+# Classe simples para guardar as configurações do perfil
 class Profile:
-    # Tamanho da senha
-    length: int
-
-    use_lower: bool = True     # letras minúsculas
-    use_upper: bool = True     # letras maiúsculas
-    use_digits: bool = True    # números
-    use_symbols: bool = False  # simbolos
-
-    # Se for True, remove caracteres que confundem (O/0, I/l/1)
-    avoid_ambiguous: bool = False
+    def __init__(self, length, use_lower=True, use_upper=True,
+                 use_digits=True, use_symbols=False, avoid_ambiguous=False):
+        self.length = length
+        self.use_lower = use_lower
+        self.use_upper = use_upper
+        self.use_digits = use_digits
+        self.use_symbols = use_symbols
+        self.avoid_ambiguous = avoid_ambiguous
 
 
+# Caracteres que podem confundir na leitura
 AMBIGUOUS = set("O0Il1")
 
 
-def build_alphabet(p: Profile) -> str:
-    """
-    Monta o 'alfabeto' (lista de caracteres permitidos) com base no perfil.
-    Exemplo: se o perfil permitir letras e números, retorna "abc...XYZ...0123..."
-    """
-    chars = ""  
+def build_alphabet(profile):
+    chars = ""
 
-    if p.use_lower:
+    if profile.use_lower:
         chars += string.ascii_lowercase
 
-    if p.use_upper:
+    if profile.use_upper:
         chars += string.ascii_uppercase
 
-    if p.use_digits:
+    if profile.use_digits:
         chars += string.digits
 
-    if p.use_symbols:
+    if profile.use_symbols:
         chars += "!@#$%&*_-+=?<>"
 
-    if p.avoid_ambiguous:
+    if profile.avoid_ambiguous:
         chars = "".join(c for c in chars if c not in AMBIGUOUS)
 
-    if not chars:
-        raise ValueError("Alfabeto vazio: escolha pelo menos um tipo de caractere.")
+    if chars == "":
+        print("Erro: nenhum tipo de caractere foi selecionado.")
+        exit()
+
     return chars
 
 
-def generate_password(p: Profile) -> str:
-    """
-    Gera uma senha segura, obedecendo as regras do perfil.
-    Importante: ela garante que terá ao menos 1 caractere de cada tipo selecionado.
-    """
-    alphabet = build_alphabet(p)
+def generate_password(profile):
+    alphabet = build_alphabet(profile)
 
-    required = []
+    password = []
 
-    if p.use_lower:
-        required.append(secrets.choice(string.ascii_lowercase))
+    # Garante pelo menos um caractere de cada tipo escolhido
+    if profile.use_lower:
+        password.append(secrets.choice(string.ascii_lowercase))
 
-    if p.use_upper:
-        required.append(secrets.choice(string.ascii_uppercase))
+    if profile.use_upper:
+        password.append(secrets.choice(string.ascii_uppercase))
 
-    if p.use_digits:
-        required.append(secrets.choice(string.digits))
+    if profile.use_digits:
+        password.append(secrets.choice(string.digits))
 
-    if p.use_symbols:
-        required.append(secrets.choice("!@#$%&*_-+=?<>"))
+    if profile.use_symbols:
+        password.append(secrets.choice("!@#$%&*_-+=?<>"))
 
-    if p.avoid_ambiguous:
-        required = [c for c in required if c not in AMBIGUOUS]
+    if len(password) > profile.length:
+        print("Erro: tamanho da senha muito pequeno para esse perfil.")
+        exit()
 
-    if len(required) > p.length:
-        raise ValueError("O tamanho é pequeno demais para cumprir as regras do perfil.")
+    # Completa o restante da senha
+    while len(password) < profile.length:
+        password.append(secrets.choice(alphabet))
 
-    remaining = [secrets.choice(alphabet) for _ in range(p.length - len(required))] # Vai preencher o restante da senha
+    # Embaralha para não ficar previsível
+    secrets.SystemRandom().shuffle(password)
 
-    password_list = required + remaining
-
-    secrets.SystemRandom().shuffle(password_list)
-
-    return "".join(password_list)
+    return "".join(password)
 
 
+# Perfis disponíveis
 PROFILES = {
-    # básico: 12 caracteres, sem simbolos
-    "basico": Profile(length=12, use_symbols=False),
-
-    # padrão: 14 caracteres, sem simbolos
-    "padrao": Profile(length=14, use_symbols=False),
-
-    # forte: 20 caracteres, com simbolos
-    "forte": Profile(length=20, use_symbols=True, avoid_ambiguous=True),
+    "basico": Profile(length=12),
+    "padrao": Profile(length=14),
+    "forte": Profile(length=20, use_symbols=True, avoid_ambiguous=True)
 }
 
 
 def main():
-    """
-    Função principal do programa.
-    """
-    print("Perfis disponíveis:", ", ".join(PROFILES.keys()))
+    print("Perfis disponíveis:")
+    for name in PROFILES:
+        print("-", name)
 
-    profile_name = input("Escolha um perfil: ").strip().lower()
+    choice = input("Escolha um perfil: ").strip().lower()
 
-    if profile_name not in PROFILES:
+    if choice not in PROFILES:
         print("Perfil inválido.")
-        return 
+        return
 
-    profile = PROFILES[profile_name]
+    senha = generate_password(PROFILES[choice])
+    print("\nSenha gerada:")
+    print(senha)
 
-    pwd = generate_password(profile)
-
-    print("\nSenha gerada:\n", pwd)
 
 if __name__ == "__main__":
     main()
